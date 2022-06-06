@@ -1,0 +1,110 @@
+version: '3'
+
+services:
+
+  elasticsearch:
+    container_name: es-container
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.11.0
+    environment:
+      - xpack.security.enabled=false
+      - "discovery.type=single-node"
+    ports:
+      - 9200:9200
+
+  postgres:
+    container_name: postgres
+    image: "postgres:9.6"
+    environment:
+      POSTGRES_PASSWORD: testing123!
+      POSTGRES_USER: fewknow
+      POSTGRES_DB: postgres
+    volumes:
+      - ./postgres:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+
+  consul:
+    image: hashicorp/consul:1.10.1
+    container_name: consul
+    volumes:
+      - consul_data:/bitnami/consul
+    ports:
+      - '127.0.0.1:8300:8300'
+      - '127.0.0.1:8301:8301'
+      - '127.0.0.1:8301:8301/udp'
+      - '127.0.0.1:8500:8500'
+      - '127.0.0.1:8600:8600'
+      - '127.0.0.1:8600:8600/udp'
+
+  vault:
+    image: hashicorp/vault:1.8.1
+    hostname: "vault"
+    container_name: vault
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: root
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+      SKIP_SETCAP: 1
+    privileged: true
+    restart: always
+
+    ports:
+     - "127.0.0.1:8200:8200"
+
+
+#   rabbit:
+#     image: "rabbitmq:3-management"
+#     hostname: "rabbit"
+#     container_name: Rabbit
+#     environment:
+#       RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
+#       RABBITMQ_DEFAULT_USER: "rabbitmq"
+#       RABBITMQ_DEFAULT_PASS: "rabbitmq"
+#       RABBITMQ_DEFAULT_VHOST: "/"
+#     ports:
+#       - "15672:15672"
+#       - "5672:5672"
+#     labels:
+#       NAME: "rabbitmq"
+#     volumes:
+#       - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins"
+#
+#  #### HERE IF NEEDED to test sending to mail server ######
+#   # fakesmtp:
+#   #   image: "munkyboy/fakesmtp"
+#   #   hostname: "smtp"
+#   #   container_name: smtp
+#   #   ports:
+#   #     - "2525:25"
+#   #   volumes:
+#   #     - "./fakesmtp/mail:/var/mail"
+#   #   restart: always
+#
+#   logstash:
+#       image: logstash:7.16.3
+#       hostname: "logstash"
+#       configs:
+#         - source: logstash_config
+#           target: /usr/share/logstash/config/logstash.yml
+#         - source: logstash_pipeline
+#           target: /usr/share/logstash/pipeline/logstash.conf
+#       ports:
+#         - "5044:5044"
+#         - "5000:5000/tcp"
+#         - "5000:5000/udp"
+#         - "9600:9600"
+#       environment:
+#         LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+# configs:
+#
+#   elastic_config:
+#     file: ./elasticsearch/config/elasticsearch.yml
+#   logstash_config:
+#     file: ./logstash/config/logstash.yml
+#   logstash_pipeline:
+#     file: ./logstash/pipeline/logstash.conf
+#   kibana_config:
+#     file: ./kibana/config/kibana.yml
+
+volumes:
+  consul_data:
+   driver: local
